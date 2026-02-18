@@ -71,7 +71,7 @@ core.register_node("crucible_smp_pack:enderblade", {
         end
 
         -- Set cooldown for 30 seconds
-        player:get_meta():set_float("enderblade_fireball_cooldown", current_time + 30)
+        player:get_meta():set_float("enderblade_fireball_cooldown", current_time + 60)
         
         return itemstack  -- Return the itemstack to keep the Enderblade
     end,
