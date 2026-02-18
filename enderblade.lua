@@ -60,6 +60,14 @@ core.register_node("crucible_smp_pack:enderblade", {
         local obj = core.add_entity(pos, "mobs_mc:dragon_fireball")
         if obj then
             obj:set_velocity(fireball_velocity)
+
+            -- Play the Ender Dragon attack sound
+            core.sound_play("mobs_mc_ender_dragon_shoot", {
+                pos = pos,
+                gain = 1.0,
+                max_hear_distance = 60,
+                pitch = 1.0,
+            })
         end
 
         -- Set cooldown for 30 seconds
