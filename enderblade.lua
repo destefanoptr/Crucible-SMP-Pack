@@ -1,5 +1,5 @@
 core.register_node("crucible_smp_pack:enderblade", {
-    description = ("Enderblade") .. core.colorize("#06f831", "\nDurability: Infinite\nDamage: 12"),
+    description = ("Enderblade") .. core.colorize("#06f831", "\nDurability: Infinite\nDamage: 9"),
     _doc_items_longdesc = sword_longdesc,
     drawtype = "mesh",
     mesh = "enderdragonblade.obj",
