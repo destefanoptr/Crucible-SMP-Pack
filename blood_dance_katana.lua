@@ -28,51 +28,61 @@ core.register_node("crucible_smp_pack:blood_dance_katana", {
             {-0.32, -0.5, -0.3, 0.95, 1.05, 0.3},    
         },
     },
+    stack_max = 1,
+    on_place = function(itemstack, placer, pointed_thing)
+        return itemstack
+    end,
     
     -- Functionality to handle right-click with the item
     on_secondary_use = function(itemstack, player, pointed_thing)
-        -- Check if the player has a cooldown attribute
-        local cooldown = player:get_meta():get_float("enderblade_fireball_cooldown") or 0
-        
-        -- Get the current time
         local current_time = os.time()
         
-        -- Check if the cooldown period has passed
+        -- Normal right click: Teleport to nearest player
+        local cooldown = player:get_meta():get_float("blood_dance_tp_cooldown") or 0
         if current_time < cooldown then
             local remaining_time = cooldown - current_time
-            core.chat_send_player(player:get_player_name(), "You must wait " .. remaining_time .. " seconds before using the Enderblade again.")
+            core.chat_send_player(player:get_player_name(), "You must wait " .. remaining_time .. " seconds before using the Blood Dance teleport again.")
             return itemstack
         end
         
-        -- Call the MCL right-click handler
         local rc = mcl_util.call_on_rightclick(itemstack, player, pointed_thing)
-        if rc then return rc end  -- If the call returns a valid value, stop further execution
+        if rc then return rc end
 
-        -- Get the player's position and look direction for the fireball
         local pos = player:get_pos()
-        local look_dir = player:get_look_dir()
-
-        -- Set position slightly above player and calculate velocity
-        pos.y = pos.y + 1.5
-        local fireball_velocity = vector.multiply(look_dir, 10)
-
-        -- Summon the Ender Dragon fireball
-        local obj = core.add_entity(pos, "mobs_mc:dragon_fireball")
-        if obj then
-            obj:set_velocity(fireball_velocity)
-
-            -- Play the Ender Dragon attack sound
-            core.sound_play("mobs_mc_ender_dragon_shoot", {
-                pos = pos,
-                gain = 1.0,
-                max_hear_distance = 60,
-                pitch = 1.0,
-            })
+        local nearest_player = nil
+        local nearest_dist = 11 -- max dist 10
+        
+        for _, obj in pairs(minetest.get_objects_inside_radius(pos, 10)) do
+            if obj:is_player() and obj ~= player then
+                local dist = vector.distance(pos, obj:get_pos())
+                if dist < nearest_dist then
+                    nearest_dist = dist
+                    nearest_player = obj
+                end
+            end
         end
 
-        -- Set cooldown for 30 seconds
-        player:get_meta():set_float("enderblade_fireball_cooldown", current_time + 60)
+        if nearest_player then
+            local target_pos = nearest_player:get_pos()
+            -- teleport slightly behind or near them? the prompt said "teleport you To the nearest person"
+            player:set_pos(target_pos)
+            
+            if mcl_potions then
+                mcl_potions.give_effect_by_level("slowness", nearest_player, 1, 14, false)
+                mcl_potions.give_effect_by_level("poison", nearest_player, 1, 60, false)
+            end
+            
+            core.sound_play("mobs_mc_enderman_teleport", {
+                pos = target_pos,
+                gain = 1.0,
+                max_hear_distance = 16,
+            })
+            
+            player:get_meta():set_float("blood_dance_tp_cooldown", current_time + 30)
+        else
+            core.chat_send_player(player:get_player_name(), "No players found within 10 blocks!")
+        end
         
-        return itemstack  -- Return the itemstack to keep the Enderblade
+        return itemstack
     end,
 })
